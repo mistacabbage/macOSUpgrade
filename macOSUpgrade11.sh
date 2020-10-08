@@ -38,7 +38,7 @@
 # REQUIREMENTS:
 #           - Jamf Pro
 #           - macOS Clients running version 10.10.5 or later
-#           - macOS Installer 10.12.4 or later
+#           - macOS Installer 11.0 beta or later
 #           - eraseInstall option is ONLY supported with macOS Installer 10.13.4+ and client-side macOS 10.13+
 #           - Look over the USER VARIABLES and configure as needed.
 #
@@ -46,6 +46,7 @@
 # For more information, visit https://github.com/kc9wwh/macOSUpgrade
 #
 # Written by: Joshua Roskos | Jamf
+#
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # APS Updates added 11/28/2019
@@ -62,6 +63,18 @@
 #
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 
+
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+#
+# Updated by: Craig Kabis | Macpro Consulting
+# Big Sur version
+#
+# # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
+
+
+
+
+
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
 # USER VARIABLES
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -73,6 +86,7 @@ OSInstaller="$4"
 
 ## Version of Installer OS. Use Parameter 5 in the JSS, or specify here.
 ## Parameter Label: Version of macOS
+########## THIS FILE DOES NOT EXIST IN BIG SUR
 ## Example Command: /usr/libexec/PlistBuddy -c 'Print :"System Image Info":version' "/Applications/Install macOS High Sierra.app/Contents/SharedSupport/InstallInfo.plist"
 ## Example: 10.12.5
 installerVersion="$5"
@@ -92,8 +106,8 @@ download_trigger="$6"
 ## Parameter Label: installESD Checksum (optional)
 ## This variable is OPTIONAL
 ## Leave the variable BLANK if you do NOT want to verify the checksum (DEFAULT)
-## Example Command: /sbin/md5 /Applications/Install\ macOS\ High\ Sierra.app/Contents/SharedSupport/InstallESD.dmg
-## Example MD5 Checksum: b15b9db3a90f9ae8a9df0f81741efa2b
+## Example Command: /sbin/md5 "/Applications/Install macOS Big Sur.app/Contents/SharedSupport/SharedSupport.dmg"
+## Example MD5 Checksum: aa17f712da7794df75588c751ba491bd
 installESDChecksum="$7"
 
 ## Valid Checksum?  O (Default) for false, 1 for true.
@@ -282,7 +296,8 @@ validate_free_space() {
 
 verifyChecksum() {
     if [ -n "$installESDChecksum" ]; then
-        osChecksum=$( /sbin/md5 -q "$OSInstaller/Contents/SharedSupport/InstallESD.dmg" )
+#        osChecksum=$( /sbin/md5 -q "$OSInstaller/Contents/SharedSupport/InstallESD.dmg" )
+	 osChecksum=$( /sbin/md5 -q "$OSInstaller/Contents/SharedSupport/SharedSupport.dmg" )
         if [ "$osChecksum" = "$installESDChecksum" ]; then
             /bin/echo "Checksum: Valid"
             validChecksum=1
@@ -415,15 +430,20 @@ do
     sleep 60
     INSTALLER_PROGRESS_PROCESS=\$(pgrep -l "Installer Progress")
 done
+
 ## Clean up files
 /bin/rm -fr "$OSInstaller"
+
 ## Update Device Inventory
 /usr/local/jamf/bin/jamf recon
+
 ## Remove LaunchAgent and LaunchDaemon
 /bin/rm -f "$osinstallersetupdAgentSettingsFilePath"
 /bin/rm -f "$osinstallersetupdDaemonSettingsFilePath"
+
 ## Remove Script
 /bin/rm -fr /usr/local/jamfps
+
 exit 0
 EOF
 
